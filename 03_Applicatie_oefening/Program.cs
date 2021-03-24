@@ -1,7 +1,9 @@
 ﻿using _00_Configuration;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Data;
 using System.Data.SqlClient;
+using System.Linq;
 
 namespace _03_Applicatie_oefening
 {
@@ -20,7 +22,29 @@ namespace _03_Applicatie_oefening
     {
         static void Main(string[] args)
         {
-            ListActions();
+            using (var context = new BoekenDatabaseContext())
+            {
+                string input = "Roald Dahl";
+
+
+                var auteur = context.Auteurs.FirstOrDefault(_ => _.Naam == input);
+
+
+                var boek = new Boek
+                {
+                    ISBNNr = "1203918231_2",
+                    PaginaAantal = 200,
+                    Title = "Tom's boek 2",
+                   Auteur = auteur,
+                    UitgeverijId = 2
+                };
+
+                context.Boeken.Add(boek);
+                context.SaveChanges();
+            }
+
+
+           //ListActions();
         }
 
         private static void ListActions()
@@ -36,7 +60,7 @@ namespace _03_Applicatie_oefening
             Console.WriteLine("8. Een auteur verwijderen (uitbreiding)");
             Console.WriteLine("9. Een boek verwijderen (uitbreiding)");
 
-            // Verkrijg een numerieke input via readline. Deze mag maximaal 6 zijn!
+            // Verkrijg een numerieke input via readline. Deze mag maximaal 9 zijn!
             int choice = GetNumericInput(9);            
             Header();
 
@@ -81,6 +105,7 @@ namespace _03_Applicatie_oefening
         {
             var connection = new SqlConnection(ConnectionString.Boekendatabase);
             connection.Open();
+
             return connection;
         }
 
@@ -110,11 +135,36 @@ namespace _03_Applicatie_oefening
         private static void AddAuthor()
         {
             Console.WriteLine("# Auteur toevoegen");
-           
-            Console.Write("> Naam:");
-            string naam = Console.ReadLine();
-            SqlConnection connection = OpenConnection();
-            // ...
+
+            // Invoer + validatie (mag niet leeg zijn)
+            string naam;
+            do
+            {
+                Console.Write("> Naam: ");
+                naam = Console.ReadLine();
+            } while (string.IsNullOrEmpty(naam));
+
+
+            using (var context = new BoekenDatabaseContext())
+            {
+                // Kijk of boek al bestaat
+                var auteurBestaat = context.Auteurs.Any(auteur => auteur.Naam == naam);
+
+                if(auteurBestaat)
+                {
+                    Console.WriteLine("Deze auteur bestaat al!");
+                } 
+                else
+                {
+                    context.Auteurs.Add(new Auteur
+                    {
+                        Naam = naam
+                    });
+
+                    Console.WriteLine($"Auteur '{naam}' toegevoegd.");
+                }
+            }
+            Header();
         }
 
         // TODO!
@@ -122,7 +172,37 @@ namespace _03_Applicatie_oefening
         // Tip: een auteur heeft veld [Id] (automatisch gegenereerd) en een [Naam]
         private static void AddPublisher()
         {
+            Console.WriteLine("# Uitgeverij toevoegen");
 
+            // Invoer + validatie (mag niet leeg zijn)
+            string naam;
+            do
+            {
+                Console.Write("> Naam: ");
+                naam = Console.ReadLine();
+            } while (string.IsNullOrEmpty(naam));
+
+            using (var context = new BoekenDatabaseContext())
+            {
+                // Kijk of boek al bestaat
+                var uitgeverijBestaat = context.Uitgeverijen.Any(uitgeverij => uitgeverij.Naam == naam);
+
+                if (uitgeverijBestaat)
+                {
+                    Console.WriteLine("Deze uitgeverij bestaat al!");
+                }
+                else
+                {
+                    context.Uitgeverijen.Add(new Uitgeverij
+                    {
+                        Naam = naam
+                    });
+
+                    Console.WriteLine($"Uitgeverij '{naam}' toegevoegd.");
+                }
+            }
+
+            Header();
         }
 
         // TODO!
@@ -131,6 +211,116 @@ namespace _03_Applicatie_oefening
         private static void AddBook()
         {
 
+            // Invoer + validatie (mag niet leeg zijn)
+            string title;
+            do
+            {
+                Console.Write("> Titel: ");
+                title = Console.ReadLine();
+            } while (string.IsNullOrEmpty(title));
+
+            // Invoer + validatie (mag niet leeg zijn)
+            string isbnnr;
+            do
+            {
+                Console.Write("> ISBN-nr: ");
+                isbnnr = Console.ReadLine();
+            } while (string.IsNullOrEmpty(isbnnr));
+
+            // Aantal pagina's
+            int aantalPaginas;
+            do
+            {
+                Console.Write("> Aantal pagina's: ");
+            } while (!int.TryParse(Console.ReadLine(), out aantalPaginas));
+
+
+            // Invoer + validatie (mag niet leeg zijn)
+            string uitgeverijNaam;
+            do
+            {
+                Console.Write("> Naam uitgeverij: ");
+                uitgeverijNaam = Console.ReadLine();
+            } while (string.IsNullOrEmpty(uitgeverijNaam));
+
+            // Invoer + validatie (mag niet leeg zijn)
+            string auteurNaam;
+            do
+            {
+                Console.Write("> Naam auteur: ");
+                auteurNaam = Console.ReadLine();
+            } while (string.IsNullOrEmpty(auteurNaam));
+
+
+
+            using (var context = new BoekenDatabaseContext())
+            {
+                // Bestaat boek al ?
+                var bestaandBoek= context.Boeken.FirstOrDefault(boek => boek.ISBNNr == isbnnr || boek.Title == title);
+                if(bestaandBoek != null)
+                {
+                    Console.WriteLine($"Dit boek bestaat al (id = {bestaandBoek.ISBNNr})");
+                } else
+                {
+                    // Boek toevoegen -- een boek heeft een auteur en uitgeverij nodig.
+                    // Indien een auteur al bestaat, wil ik dat deze gebruikt wordt. Anders aanmaken.
+                    // Idem voor een uitgeverij 
+                    Uitgeverij uitgeverij = context.Uitgeverijen.FirstOrDefault(u => u.Naam == uitgeverijNaam);
+                    // Uitgeverij werd niet gevonden
+                    if(uitgeverij == null)
+                    {
+                        // Dus maken we één aan:
+                        uitgeverij = new Uitgeverij
+                        {
+                            Naam = uitgeverijNaam
+                        };
+                        context.Uitgeverijen.Add(uitgeverij);
+                        Console.WriteLine("Info: nieuwe uitgeverij aangemaakt");
+                    }
+
+                    // We doen hetzelfde voor auteur 
+                    Auteur auteur = context.Auteurs.FirstOrDefault(u => u.Naam == auteurNaam);
+                    // Auteur werd werd niet gevonden
+                    if (auteur == null)
+                    {
+                        // Dus maken we één aan:
+                        auteur = new Auteur
+                        {
+                            Naam = auteurNaam
+                        };
+                        context.Auteurs.Add(auteur);
+                        Console.WriteLine("Info: nieuwe auteur aangemaakt");
+                    }
+
+
+                    // Ik heb nu toegang tot zowel Auteur als Uitgeverij
+                    // Of die al dan niet 'nieuw' of 'bestaand' is, maakt niet meer uit. EF Core houdt daar rekening mee.
+
+                    // Volgende stap is om het boek te maken
+                    var boek = new Boek
+                    {
+                        ISBNNr = isbnnr,
+                        Auteur = auteur,
+                        Uitgeverij = uitgeverij,
+                        PaginaAantal = aantalPaginas,
+                        Title = title
+                        // UitgeverijID en AuteurID moet ik niet invullen
+                    };
+
+                    // En toevoegen aan de context
+                    context.Boeken.Add(boek);
+
+                    // Laatste stap is om te saven
+                    context.SaveChanges();
+
+                    Console.WriteLine("Boek werd toegevoegd!");
+                }
+
+            
+
+            }
+
+            Header();
         }
 
         // TODO!
@@ -138,7 +328,27 @@ namespace _03_Applicatie_oefening
         // Tip: een auteur heeft veld [Id] (automatisch gegenereerd) en een [Naam]
         private static void ShowAuthors()
         {
+            using (var connection = OpenConnection())
+            {
+                // We maken een commando object richting de database
+                SqlCommand command = connection.CreateCommand();
 
+                // We geven deze een CommandText, nl. onze query
+                command.CommandText = "SELECT Id, Naam FROM Auteur";
+
+                // Commando uitvoeren. Ook deze implementeert de IDisposable interface, 
+                // dus ofwel roepen we Dispose() op, ofwel gebruiken we using
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    // reader.Read() blijft 'true' geven zolang er nog rijen beschikbaar zijn om te raadplegen
+                    // indien geen rijen meer beschikbaar, wordt het resultaat 'false' en stopt onze while-loop
+                    while (reader.Read())
+                    {
+                        Console.WriteLine("Auteur: {1} (id = {0})", reader["Id"], reader["Naam"]);
+                    }
+                }
+            }
+            
         }
 
         // TODO!
@@ -146,7 +356,27 @@ namespace _03_Applicatie_oefening
         // Tip: een auteur heeft veld [Id] (automatisch gegenereerd) en een [Naam]
         private static void ShowPublishers()
         {
+            using (var connection = OpenConnection())
+            {
+                // We maken een commando object richting de database
+                SqlCommand command = connection.CreateCommand();
 
+                // We geven deze een CommandText, nl. onze query
+                command.CommandText = "SELECT Id, Naam FROM Uitgeverij";
+
+                // Commando uitvoeren. Ook deze implementeert de IDisposable interface, 
+                // dus ofwel roepen we Dispose() op, ofwel gebruiken we using
+                using (SqlDataReader reader = command.ExecuteReader())
+                {
+                    // reader.Read() blijft 'true' geven zolang er nog rijen beschikbaar zijn om te raadplegen
+                    // indien geen rijen meer beschikbaar, wordt het resultaat 'false' en stopt onze while-loop
+                    while (reader.Read())
+                    {
+                        Console.WriteLine("Uitgeverij: {1} (id = {0})", reader["Id"], reader["Naam"]);
+                    }
+                }
+            }
+            Header();
         }
 
         // TODO!
@@ -159,6 +389,23 @@ namespace _03_Applicatie_oefening
         // - Uitgeverij (naam)
         private static void ShowBooks()
         {
+            using (var context = new BoekenDatabaseContext())
+            {
+                var lijstBoeken = context.Boeken
+                    .Include(boek => boek.Uitgeverij)
+                    .Include(boek => boek.Auteur)
+                    .ToList();
+
+                Console.WriteLine($"Er werden {lijstBoeken.Count} boeken gevonden:");
+                foreach(var boek in lijstBoeken)
+                {
+                    Console.WriteLine($" - '{boek.Title}' met ISBN-nummer '{boek.ISBNNr}' heeft {boek.PaginaAantal} pagina's," +
+                        $" is geschreven door '{boek.Auteur.Naam}' en" + 
+                        $" is uitgebracht door '{boek.Uitgeverij.Naam}'"
+                    );
+                }
+            }
+            Header();
 
         }
 

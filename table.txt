@@ -1,0 +1,82 @@
+USE [Boekendatabase]
+GO
+
+/****** Object:  Table [dbo].[Auteur]    Script Date: 24/03/2021 09:40:36 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[Auteur](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[Naam] [nvarchar](max) NULL,
+ CONSTRAINT [PK_dbo.Auteur] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+
+
+USE [Boekendatabase]
+GO
+
+/****** Object:  Table [dbo].[Boek]    Script Date: 24/03/2021 09:40:45 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[Boek](
+	[ISBNNr] [nvarchar](128) NOT NULL,
+	[Title] [nvarchar](max) NULL,
+	[PaginaAantal] [int] NOT NULL,
+	[AuteurId] [int] NOT NULL,
+	[UitgeverijId] [int] NOT NULL,
+ CONSTRAINT [PK_dbo.Boek] PRIMARY KEY CLUSTERED 
+(
+	[ISBNNr] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+
+ALTER TABLE [dbo].[Boek]  WITH CHECK ADD  CONSTRAINT [FK_dbo.Boek_dbo.Auteur_AuteurId] FOREIGN KEY([AuteurId])
+REFERENCES [dbo].[Auteur] ([Id])
+ON DELETE CASCADE
+GO
+
+ALTER TABLE [dbo].[Boek] CHECK CONSTRAINT [FK_dbo.Boek_dbo.Auteur_AuteurId]
+GO
+
+ALTER TABLE [dbo].[Boek]  WITH CHECK ADD  CONSTRAINT [FK_dbo.Boek_dbo.Uitgeverij_UitgeverijId] FOREIGN KEY([UitgeverijId])
+REFERENCES [dbo].[Uitgeverij] ([Id])
+ON DELETE CASCADE
+GO
+
+ALTER TABLE [dbo].[Boek] CHECK CONSTRAINT [FK_dbo.Boek_dbo.Uitgeverij_UitgeverijId]
+GO
+
+
+USE [Boekendatabase]
+GO
+
+/****** Object:  Table [dbo].[Uitgeverij]    Script Date: 24/03/2021 09:40:51 ******/
+SET ANSI_NULLS ON
+GO
+
+SET QUOTED_IDENTIFIER ON
+GO
+
+CREATE TABLE [dbo].[Uitgeverij](
+	[Id] [int] IDENTITY(1,1) NOT NULL,
+	[Naam] [nvarchar](max) NULL,
+ CONSTRAINT [PK_dbo.Uitgeverij] PRIMARY KEY CLUSTERED 
+(
+	[Id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON, OPTIMIZE_FOR_SEQUENTIAL_KEY = OFF) ON [PRIMARY]
+) ON [PRIMARY] TEXTIMAGE_ON [PRIMARY]
+GO
+
+

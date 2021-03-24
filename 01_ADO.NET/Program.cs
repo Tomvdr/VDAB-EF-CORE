@@ -14,7 +14,9 @@ namespace _01_ADO.NET
          
         }
 
-        public static void OpenConnection(string connectionString)
+
+
+        public static void OpenConnection(  string connectionString)
         {
             // Aanmaken van nieuwe SqlConnection
             // Via de Using wordt er automatisch `connection.Dispose()` uitgevoerd op het einde
@@ -40,6 +42,20 @@ namespace _01_ADO.NET
                     {
                         Console.WriteLine("ID: {0}, Naam {1}", reader["Id"], reader["Naam"]);
                     }
+                }
+
+
+                SqlCommand command2 = connection.CreateCommand();
+                command2.CommandText = "SELECT Id, Naam FROM Uitgeverij";
+
+                using (SqlDataReader reader = command2.ExecuteReader())
+                {
+                    while(reader.Read())
+                    { 
+                    }
+
+
+                    
                 }
             }
         }

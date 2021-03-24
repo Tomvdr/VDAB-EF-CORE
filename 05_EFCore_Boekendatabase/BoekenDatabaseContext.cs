@@ -1,10 +1,15 @@
 ﻿using _00_Configuration;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace _05_EFCore_Boekendatabase
 {
     public class BoekenDatabaseContext : DbContext
     {
+        private static readonly ILoggerFactory _loggerFactory 
+            = LoggerFactory.Create(builder => { builder.AddConsole(); });
+
+
 
         // Tabellen
         public DbSet<Boek> Boeken { get; set; }
@@ -15,7 +20,10 @@ namespace _05_EFCore_Boekendatabase
         // Wordt opgeroepen bij creatie
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlServer(ConnectionString.Boekendatabase);
+            optionsBuilder
+                .UseLoggerFactory(_loggerFactory)  //tie-up DbContext with LoggerFactory object
+                .EnableSensitiveDataLogging()
+                .UseSqlServer(ConnectionString.Boekendatabase);
         }
 
 

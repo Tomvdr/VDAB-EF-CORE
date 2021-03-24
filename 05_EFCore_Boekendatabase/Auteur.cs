@@ -11,6 +11,8 @@ namespace _05_EFCore_Boekendatabase
         [Key]
         public int Id { get; set; }
         public string Naam { get; set; }
-        public virtual List<Boek> Boeken { get; set;}
+
+
+        public List<Boek> Boeken { get; set;}
     }
 }

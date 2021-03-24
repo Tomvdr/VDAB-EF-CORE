@@ -15,20 +15,27 @@ namespace _05_EFCore_Boekendatabase
         {
             using (var context = new BoekenDatabaseContext())
             {
-                var auteurs = context
-                    .Auteurs
-                    .Include(_ => _.Boeken)
+                Console.WriteLine("===================");
+                Console.WriteLine("Take voor de ToList");
+                Console.WriteLine("===================");
+                var auteurs = context.Auteurs // select top 3 * from auteurs
+                    .OrderBy(_ => _.Naam )
+                    .Take(3)
                     .ToList();
 
-                foreach (var auteur in auteurs)
-                {
-                    Console.WriteLine("{0} - {1}", auteur.Id, auteur.Naam);
+                Console.WriteLine("===================");
+                Console.WriteLine("ToList voor de Take");
+                Console.WriteLine("===================");
+                var auteurs2 = context.Auteurs // select top 3 * from auteurs
+                     .OrderBy(_ => _.Naam)
+                     .ToList()
+                     .Take(3);
 
-                    foreach (var boek in auteur.Boeken)
-                    {
-                        Console.WriteLine("> {0} - {1}", boek.ISBNNr, boek.Title);
-                    }
-                }
+
+
+
+
+                context.SaveChanges();
             }
         }
     }
