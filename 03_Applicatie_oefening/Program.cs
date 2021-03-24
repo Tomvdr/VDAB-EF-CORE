@@ -11,11 +11,11 @@ namespace _03_Applicatie_oefening
     //  - Records toevoegen aan elke tabel
     //  - Elke tabel volledig kunnen uitlezen via PK, naam of titel
     //    - de PK moet identiek zijn, naam of titel mag via een LIKE 
-    //  - Een detail kunnen tonen van een boek a.h.v. ISBN-nr
     // Hieronder is al een geraamte voor de selectiemenu's.
     // Aan jou om alles uit te breiden!
     // Uitbreiding indien tijd over/snel klaar:
     //  - Inputvalidatie. Tekst moet altijd ingevuld zijn (string.IsNullOrEmpty)
+    //  - Het verwijderen van uitgeverij, auteur of boek (bij het verwijderen van een auteur of een uitgeverij, eerst melding tonen indien die ergens gebruikt wordt!)
     class Program
     {
         static void Main(string[] args)
@@ -32,11 +32,12 @@ namespace _03_Applicatie_oefening
             Console.WriteLine("4. Alle auteurs tonen");
             Console.WriteLine("5. Alle uitgeverijen tonen"); 
             Console.WriteLine("6. Alle boeken tonen");
+            Console.WriteLine("7. Een uitgeverij verwijderen (uitbreiding)");
+            Console.WriteLine("8. Een auteur verwijderen (uitbreiding)");
+            Console.WriteLine("9. Een boek verwijderen (uitbreiding)");
 
-          
             // Verkrijg een numerieke input via readline. Deze mag maximaal 6 zijn!
-            int choice = GetNumericInput(6);
-            
+            int choice = GetNumericInput(9);            
             Header();
 
             switch (choice)
@@ -58,6 +59,15 @@ namespace _03_Applicatie_oefening
                     break;
                 case 6:
                     ShowBooks();
+                    break;
+                case 7:
+                    DeleteAuthor();
+                    break;
+                case 8:
+                    DeletePublisher();
+                    break;
+                case 9:
+                    DeleteBook();
                     break;
             }
 

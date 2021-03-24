@@ -18,7 +18,7 @@ namespace _01_ADO.NET
         {
             // Aanmaken van nieuwe SqlConnection
             // Via de Using wordt er automatisch `connection.Dispose()` uitgevoerd op het einde
-            // SqlConnection implementeert de IDisposable interface
+            // want SqlConnection implementeert de IDisposable interface
             using (var connection = new SqlConnection(connectionString))
             {
                 // Open de connectie
