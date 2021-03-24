@@ -113,7 +113,6 @@ namespace _03_Applicatie_oefening
            
             Console.Write("> Naam:");
             string naam = Console.ReadLine();
-
             SqlConnection connection = OpenConnection();
             // ...
         }
@@ -159,6 +158,32 @@ namespace _03_Applicatie_oefening
         // - Auteur (naam)
         // - Uitgeverij (naam)
         private static void ShowBooks()
+        {
+
+        }
+
+        // TODO! (uitbreiding)
+        // TIP: Je kan een auteur pas verwijderen indien geen enkel boek deze nog referenced.
+        // Toon dus een gepaste melding als dit het geval is -- geen exception!
+        private static void DeleteAuthor()
+        {
+            
+        }
+
+
+        // TODO! (uitbreiding)
+        // TIP: Je kan een uitgeverij pas verwijderen indien geen enkel boek deze nog referenced.
+        // Toon dus een gepaste melding als dit het geval is -- geen exception!
+        private static void DeletePublisher()
+        {
+
+        }
+
+
+        // TODO! (uitbreiding)
+        // TIP: Je kan een auteur pas verwijderen indien geen enkel boek deze nog referenced.
+        // Toon dus een gepaste melding als dit het geval is -- geen exception!
+        private static void DeleteBook()
         {
 
         }
