@@ -22,29 +22,7 @@ namespace _03_Applicatie_oefening
     {
         static void Main(string[] args)
         {
-            using (var context = new BoekenDatabaseContext())
-            {
-                string input = "Roald Dahl";
-
-
-                var auteur = context.Auteurs.FirstOrDefault(_ => _.Naam == input);
-
-
-                var boek = new Boek
-                {
-                    ISBNNr = "1203918231_2",
-                    PaginaAantal = 200,
-                    Title = "Tom's boek 2",
-                   Auteur = auteur,
-                    UitgeverijId = 2
-                };
-
-                context.Boeken.Add(boek);
-                context.SaveChanges();
-            }
-
-
-           //ListActions();
+           ListActions();
         }
 
         private static void ListActions()
@@ -85,10 +63,10 @@ namespace _03_Applicatie_oefening
                     ShowBooks();
                     break;
                 case 7:
-                    DeleteAuthor();
+                    DeletePublisher();
                     break;
                 case 8:
-                    DeletePublisher();
+                    DeleteAuthor();
                     break;
                 case 9:
                     DeleteBook();
@@ -257,17 +235,18 @@ namespace _03_Applicatie_oefening
             {
                 // Bestaat boek al ?
                 var bestaandBoek= context.Boeken.FirstOrDefault(boek => boek.ISBNNr == isbnnr || boek.Title == title);
-                if(bestaandBoek != null)
+                if (bestaandBoek != null)
                 {
                     Console.WriteLine($"Dit boek bestaat al (id = {bestaandBoek.ISBNNr})");
-                } else
+                }
+                else
                 {
                     // Boek toevoegen -- een boek heeft een auteur en uitgeverij nodig.
                     // Indien een auteur al bestaat, wil ik dat deze gebruikt wordt. Anders aanmaken.
                     // Idem voor een uitgeverij 
                     Uitgeverij uitgeverij = context.Uitgeverijen.FirstOrDefault(u => u.Naam == uitgeverijNaam);
                     // Uitgeverij werd niet gevonden
-                    if(uitgeverij == null)
+                    if (uitgeverij == null)
                     {
                         // Dus maken we één aan:
                         uitgeverij = new Uitgeverij
@@ -314,12 +293,8 @@ namespace _03_Applicatie_oefening
                     context.SaveChanges();
 
                     Console.WriteLine("Boek werd toegevoegd!");
-                }
-
-            
-
+                }       
             }
-
             Header();
         }
 
@@ -328,27 +303,25 @@ namespace _03_Applicatie_oefening
         // Tip: een auteur heeft veld [Id] (automatisch gegenereerd) en een [Naam]
         private static void ShowAuthors()
         {
-            using (var connection = OpenConnection())
+            using (var context = new BoekenDatabaseContext())
             {
-                // We maken een commando object richting de database
-                SqlCommand command = connection.CreateCommand();
+                var auteurs = context.Auteurs
+                    .Include(auteur => auteur.Boeken)
+                    .ToList();
 
-                // We geven deze een CommandText, nl. onze query
-                command.CommandText = "SELECT Id, Naam FROM Auteur";
-
-                // Commando uitvoeren. Ook deze implementeert de IDisposable interface, 
-                // dus ofwel roepen we Dispose() op, ofwel gebruiken we using
-                using (SqlDataReader reader = command.ExecuteReader())
+                foreach (var auteur in auteurs)
                 {
-                    // reader.Read() blijft 'true' geven zolang er nog rijen beschikbaar zijn om te raadplegen
-                    // indien geen rijen meer beschikbaar, wordt het resultaat 'false' en stopt onze while-loop
-                    while (reader.Read())
+                    Console.WriteLine("Auteur: {1} (id = {0}) heeft {2} boek(en) geschreven: ",
+                        auteur.Naam, auteur.Id, auteur.Boeken.Count);
+
+                    foreach (var boek in auteur.Boeken)
                     {
-                        Console.WriteLine("Auteur: {1} (id = {0})", reader["Id"], reader["Naam"]);
+                        Console.WriteLine($" - Boek: {boek.Title} (ISBN-nummer = {boek.ISBNNr}");
                     }
                 }
+
             }
-            
+            Header();
         }
 
         // TODO!
@@ -356,25 +329,22 @@ namespace _03_Applicatie_oefening
         // Tip: een auteur heeft veld [Id] (automatisch gegenereerd) en een [Naam]
         private static void ShowPublishers()
         {
-            using (var connection = OpenConnection())
+            using (var context = new BoekenDatabaseContext())
             {
-                // We maken een commando object richting de database
-                SqlCommand command = connection.CreateCommand();
+                var uitgeverijen = context.Uitgeverijen
+                    .Include(uitgeverij => uitgeverij.Boeken)
+                    .ToList();
 
-                // We geven deze een CommandText, nl. onze query
-                command.CommandText = "SELECT Id, Naam FROM Uitgeverij";
-
-                // Commando uitvoeren. Ook deze implementeert de IDisposable interface, 
-                // dus ofwel roepen we Dispose() op, ofwel gebruiken we using
-                using (SqlDataReader reader = command.ExecuteReader())
+                foreach(var uitgeverij in uitgeverijen)
                 {
-                    // reader.Read() blijft 'true' geven zolang er nog rijen beschikbaar zijn om te raadplegen
-                    // indien geen rijen meer beschikbaar, wordt het resultaat 'false' en stopt onze while-loop
-                    while (reader.Read())
+                    Console.WriteLine("Uitgeverij: {1} (id = {0}) heeft {2} boek(en) uitgebracht: ", 
+                        uitgeverij.Naam, uitgeverij.Id, uitgeverij.Boeken.Count);
+
+                    foreach(var boek in uitgeverij.Boeken)
                     {
-                        Console.WriteLine("Uitgeverij: {1} (id = {0})", reader["Id"], reader["Naam"]);
+                        Console.WriteLine($" - Boek: {boek.Title} (ISBN-nummer = {boek.ISBNNr}");
                     }
-                }
+                } 
             }
             Header();
         }
@@ -414,7 +384,34 @@ namespace _03_Applicatie_oefening
         // Toon dus een gepaste melding als dit het geval is -- geen exception!
         private static void DeleteAuthor()
         {
-            
+            int authorId;
+            do
+            {
+                Console.Write("Author ID: ");
+            } while (!int.TryParse(Console.ReadLine(), out authorId));
+
+
+            using (var context = new BoekenDatabaseContext())
+            {
+                // zoek de auteur; kijk of die bestaat
+                var auteur = context.Auteurs.FirstOrDefault(auteur => auteur.Id == authorId);
+
+                if(auteur == null)
+                {
+                    Console.WriteLine("Geen auteur met deze ID gevonden");
+                    return;
+                }
+
+                if (auteur.Boeken.Any())
+                {
+                    Console.WriteLine("Deze auteur heeft verschillende boeken uitgebracht. Verwijderen is niet toegestaan!");
+                    return;
+                }
+                
+                context.Auteurs.Remove(auteur);
+                context.SaveChanges();
+                Console.WriteLine("Auteur werd verwijderd");
+            }
         }
 
 
@@ -423,16 +420,42 @@ namespace _03_Applicatie_oefening
         // Toon dus een gepaste melding als dit het geval is -- geen exception!
         private static void DeletePublisher()
         {
+            string uitgeverijNaam;
+            do
+            {
+                Console.Write("Naam uitgeverij: ");
+                uitgeverijNaam = Console.ReadLine();
+            } while (string.IsNullOrEmpty(uitgeverijNaam));
 
+
+            using (var context = new BoekenDatabaseContext())
+            {
+                // zoek de auteur; kijk of die bestaat
+                var uitgeverij = context.Uitgeverijen.FirstOrDefault(uitgeverij => uitgeverij.Naam == uitgeverijNaam);
+
+                if (uitgeverij == null)
+                {
+                    Console.WriteLine("Geen uitgeverij met deze naam gevonden");
+                    return;
+                }
+
+                if (uitgeverij.Boeken.Any())
+                {
+                    Console.WriteLine("Deze uitgeverij heeft verschillende boeken uitgebracht. Verwijderen is niet toegestaan!");
+                    return;
+                }
+
+                context.Uitgeverijen.Remove(uitgeverij);
+                context.SaveChanges();
+                Console.WriteLine("Uitgeverij werd verwijderd");
+
+            }
         }
 
 
-        // TODO! (uitbreiding)
-        // TIP: Je kan een auteur pas verwijderen indien geen enkel boek deze nog referenced.
-        // Toon dus een gepaste melding als dit het geval is -- geen exception!
         private static void DeleteBook()
         {
-
+            // idem als hierboven
         }
     }
 }

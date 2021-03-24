@@ -4,8 +4,7 @@
     {
         // Boekendatabase files zitten mee in deze repository
         public static string Boekendatabase = "Data Source=.\\SQLEXPRESS;Initial Catalog=Boekendatabase;Integrated Security=True;Trusted_Connection=True";
-        // AdventureWorks is een sample database van Microsoft
-        // https://docs.microsoft.com/en-us/sql/samples/adventureworks-install-configure?view=sql-server-ver15&tabs=ssms
-        public static string AdventureWorks = "Data Source=.\\SQLEXPRESS;Initial Catalog=AdventureWorks;Integrated Security=True;Trusted_Connection=True";
+        // Sunshine autos
+        public static string SunshineAutos = "Data Source=.\\SQLEXPRESS;Initial Catalog=SunshineAutos;Integrated Security=True;Trusted_Connection=True";
     }
 }
