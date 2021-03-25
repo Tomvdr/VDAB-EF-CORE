@@ -1,7 +1,6 @@
-﻿using _00_Configuration;
+﻿using Microsoft.EntityFrameworkCore;
 using System;
-using System.Data;
-using System.Data.SqlClient;
+using System.Linq;
 
 namespace _03_Applicatie_oefening
 {
@@ -20,7 +19,7 @@ namespace _03_Applicatie_oefening
     {
         static void Main(string[] args)
         {
-            ListActions();
+           ListActions();
         }
 
         private static void ListActions()
@@ -36,8 +35,8 @@ namespace _03_Applicatie_oefening
             Console.WriteLine("8. Een auteur verwijderen (uitbreiding)");
             Console.WriteLine("9. Een boek verwijderen (uitbreiding)");
 
-            // Verkrijg een numerieke input via readline. Deze mag maximaal 6 zijn!
-            int choice = GetNumericInput(9);            
+            // Verkrijg een numerieke input via readline. Deze mag maximaal 9 zijn!
+            int choice = NumericInput("Keuze");            
             Header();
 
             switch (choice)
@@ -61,10 +60,10 @@ namespace _03_Applicatie_oefening
                     ShowBooks();
                     break;
                 case 7:
-                    DeleteAuthor();
+                    DeletePublisher();
                     break;
                 case 8:
-                    DeletePublisher();
+                    DeleteAuthor();
                     break;
                 case 9:
                     DeleteBook();
@@ -74,47 +73,77 @@ namespace _03_Applicatie_oefening
             ListActions();
         }
 
-
-        // Methode voor de herhalende code van het openen van een connectie te beperken
-        // Gebruik deze bij al je database queries!
-        private static SqlConnection OpenConnection()
+        private static void Error(string message)
         {
-            var connection = new SqlConnection(ConnectionString.Boekendatabase);
-            connection.Open();
-            return connection;
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine($"Error: {message}");
+            Console.ForegroundColor = ConsoleColor.White;
         }
+
+        private static void Success(string message)
+        {
+            Console.ForegroundColor = ConsoleColor.Green;
+            Console.WriteLine($"Succes: {message}");
+            Console.ForegroundColor = ConsoleColor.White;
+        }
+
+        private static string TextInput(string veld)
+        {
+            string input;
+            do
+            {
+                Console.Write($"> {veld}: ");
+                input = Console.ReadLine();
+            } while (string.IsNullOrEmpty(input));
+            return input;
+        }
+
+        private static int NumericInput(string veld)
+        {
+            int value;
+            do
+            {
+                Console.Write($"> {veld}: ");
+            } while (!int.TryParse(Console.ReadLine(), out value));
+            return value;
+        }
+
 
         private static void Header()
         {
             Console.WriteLine("--------------------------");
         }
 
-        // Methode voor een numerieke waarde in te geven
-        // Gaat blijven vragen naar een waarde totdat een geldig nummer is
-        private static int GetNumericInput(int max)
-        {
-            Console.Write("> ");
-            int choice;
-            while (!int.TryParse(Console.ReadLine(), out choice) || choice > max || choice < 0)
-            {
-                Console.WriteLine("Fout! Vul een numerieke waarde in.");
-                Console.Write("> ");
-            }
-
-            return choice;
-        }
-
+      
         // TODO!
         // Toevoegen van een auteur
         // Tip: een auteur heeft veld [Id] (automatisch gegenereerd) en een [Naam]
         private static void AddAuthor()
         {
             Console.WriteLine("# Auteur toevoegen");
-           
-            Console.Write("> Naam:");
-            string naam = Console.ReadLine();
-            SqlConnection connection = OpenConnection();
-            // ...
+            string naam = TextInput("Naam");
+
+            using (var context = new BoekenDatabaseContext())
+            {
+                // Kijk of boek al bestaat
+                var auteurBestaat = context.Auteurs.Any(auteur => auteur.Naam == naam);
+
+                if(auteurBestaat)
+                {
+                    Error("Deze auteur bestaat al!");
+                    return;
+                } 
+                
+                context.Auteurs.Add(new Auteur
+                {
+                    Naam = naam
+                });
+
+                context.SaveChanges();
+                Success($"Auteur '{naam}' toegevoegd.");
+                
+            }
+            Header();
         }
 
         // TODO!
@@ -122,7 +151,33 @@ namespace _03_Applicatie_oefening
         // Tip: een auteur heeft veld [Id] (automatisch gegenereerd) en een [Naam]
         private static void AddPublisher()
         {
+            Console.WriteLine("# Uitgeverij toevoegen");
 
+            string naam = TextInput("Naam");
+
+            using (var context = new BoekenDatabaseContext())
+            {
+                // Kijk of boek al bestaat
+                var uitgeverijBestaat = context.Uitgeverijen
+                    .Any(uitgeverij => uitgeverij.Naam == naam);
+
+                if (uitgeverijBestaat)
+                {
+                    Error("Deze uitgeverij bestaat al!");
+                    return;
+                }
+               
+                context.Uitgeverijen.Add(new Uitgeverij
+                {
+                    Naam = naam
+                });
+
+                context.SaveChanges();
+                Success($"Uitgeverij '{naam}' toegevoegd.");
+                
+            }
+
+            Header();
         }
 
         // TODO!
@@ -130,7 +185,77 @@ namespace _03_Applicatie_oefening
         // Tip: een auteur heeft veld [Id] (automatisch gegenereerd), [Titel], [PaginaAantal] en 2 foreign keys
         private static void AddBook()
         {
+            string title = TextInput("Titel");
+            string isbnnr = TextInput("ISBN-nummer");
+            int aantalPaginas = NumericInput("Aantal pagina's");
+            string uitgeverijNaam = TextInput("Naam uitgeverij");
+            string auteurNaam = TextInput("Naam auteur");
 
+            using (var context = new BoekenDatabaseContext())
+            {
+                // Bestaat boek al ?
+                var bestaandBoek= context.Boeken.FirstOrDefault(boek => boek.ISBNNr == isbnnr || boek.Title == title);
+                if (bestaandBoek != null)
+                {
+                    Error($"Dit boek bestaat al (id = {bestaandBoek.ISBNNr})");
+                }
+                else
+                {
+                    // Boek toevoegen -- een boek heeft een auteur en uitgeverij nodig.
+                    // Indien een auteur al bestaat, wil ik dat deze gebruikt wordt. Anders aanmaken.
+                    // Idem voor een uitgeverij 
+                    Uitgeverij uitgeverij = context.Uitgeverijen.FirstOrDefault(u => u.Naam == uitgeverijNaam);
+                    // Uitgeverij werd niet gevonden
+                    if (uitgeverij == null)
+                    {
+                        // Dus maken we één aan:
+                        uitgeverij = new Uitgeverij
+                        {
+                            Naam = uitgeverijNaam
+                        };
+                        context.Uitgeverijen.Add(uitgeverij);
+                        Success("Info: nieuwe uitgeverij aangemaakt");
+                    }
+
+                    // We doen hetzelfde voor auteur 
+                    Auteur auteur = context.Auteurs.FirstOrDefault(u => u.Naam == auteurNaam);
+                    // Auteur werd werd niet gevonden
+                    if (auteur == null)
+                    {
+                        // Dus maken we één aan:
+                        auteur = new Auteur
+                        {
+                            Naam = auteurNaam
+                        };
+                        context.Auteurs.Add(auteur);
+                        Success("Info: nieuwe auteur aangemaakt");
+                    }
+
+
+                    // Ik heb nu toegang tot zowel Auteur als Uitgeverij
+                    // Of die al dan niet 'nieuw' of 'bestaand' is, maakt niet meer uit. EF Core houdt daar rekening mee.
+
+                    // Volgende stap is om het boek te maken
+                    var boek = new Boek
+                    {
+                        ISBNNr = isbnnr,
+                        Auteur = auteur,
+                        Uitgeverij = uitgeverij,
+                        PaginaAantal = aantalPaginas,
+                        Title = title
+                        // UitgeverijID en AuteurID moet ik niet invullen
+                    };
+
+                    // En toevoegen aan de context
+                    context.Boeken.Add(boek);
+
+                    // Laatste stap is om te saven
+                    context.SaveChanges();
+
+                    Success("Boek werd toegevoegd!");
+                }       
+            }
+            Header();
         }
 
         // TODO!
@@ -138,7 +263,25 @@ namespace _03_Applicatie_oefening
         // Tip: een auteur heeft veld [Id] (automatisch gegenereerd) en een [Naam]
         private static void ShowAuthors()
         {
+            using (var context = new BoekenDatabaseContext())
+            {
+                var auteurs = context.Auteurs
+                    .Include(auteur => auteur.Boeken)
+                    .ToList();
 
+                foreach (var auteur in auteurs)
+                {
+                    Console.WriteLine("Auteur: {1} (id = {0}) heeft {2} boek(en) geschreven: ",
+                        auteur.Naam, auteur.Id, auteur.Boeken.Count);
+
+                    foreach (var boek in auteur.Boeken)
+                    {
+                        Console.WriteLine($" - Boek: {boek.Title} (ISBN-nummer = {boek.ISBNNr}");
+                    }
+                }
+
+            }
+            Header();
         }
 
         // TODO!
@@ -146,7 +289,24 @@ namespace _03_Applicatie_oefening
         // Tip: een auteur heeft veld [Id] (automatisch gegenereerd) en een [Naam]
         private static void ShowPublishers()
         {
+            using (var context = new BoekenDatabaseContext())
+            {
+                var uitgeverijen = context.Uitgeverijen
+                    .Include(uitgeverij => uitgeverij.Boeken)
+                    .ToList();
 
+                foreach(var uitgeverij in uitgeverijen)
+                {
+                    Console.WriteLine("Uitgeverij: {1} (id = {0}) heeft {2} boek(en) uitgebracht: ", 
+                        uitgeverij.Naam, uitgeverij.Id, uitgeverij.Boeken.Count);
+
+                    foreach(var boek in uitgeverij.Boeken)
+                    {
+                        Console.WriteLine($" - Boek: {boek.Title} (ISBN-nummer = {boek.ISBNNr}");
+                    }
+                } 
+            }
+            Header();
         }
 
         // TODO!
@@ -159,6 +319,23 @@ namespace _03_Applicatie_oefening
         // - Uitgeverij (naam)
         private static void ShowBooks()
         {
+            using (var context = new BoekenDatabaseContext())
+            {
+                var lijstBoeken = context.Boeken
+                    .Include(boek => boek.Uitgeverij)
+                    .Include(boek => boek.Auteur)
+                    .ToList();
+
+                Console.WriteLine($"Er werden {lijstBoeken.Count} boeken gevonden:");
+                foreach(var boek in lijstBoeken)
+                {
+                    Console.WriteLine($" - '{boek.Title}' met ISBN-nummer '{boek.ISBNNr}' heeft {boek.PaginaAantal} pagina's," +
+                        $" is geschreven door '{boek.Auteur.Naam}' en" + 
+                        $" is uitgebracht door '{boek.Uitgeverij.Naam}'"
+                    );
+                }
+            }
+            Header();
 
         }
 
@@ -167,7 +344,32 @@ namespace _03_Applicatie_oefening
         // Toon dus een gepaste melding als dit het geval is -- geen exception!
         private static void DeleteAuthor()
         {
-            
+            int authorId = NumericInput("Author ID");
+         
+            using (var context = new BoekenDatabaseContext())
+            {
+                // zoek de auteur; kijk of die bestaat
+                var auteur = context.Auteurs
+                    .Include(auteur => auteur.Boeken)
+                    .FirstOrDefault(auteur => auteur.Id == authorId);
+
+                if(auteur == null)
+                {
+                    Error("Geen auteur met deze ID gevonden");
+                    return;
+                }
+
+                if (auteur.Boeken.Any())
+                {
+                    Error("Deze auteur heeft verschillende boeken uitgebracht. Verwijderen is niet toegestaan!");
+                    return;
+                }
+                
+                context.Auteurs.Remove(auteur);
+                context.SaveChanges();
+                Success("Deze auteur werd verwijderd");
+            }
+            Header();
         }
 
 
@@ -176,16 +378,56 @@ namespace _03_Applicatie_oefening
         // Toon dus een gepaste melding als dit het geval is -- geen exception!
         private static void DeletePublisher()
         {
+            string uitgeverijNaam = TextInput("Naam uitgeverij");
+      
+            using (var context = new BoekenDatabaseContext())
+            {
+                // zoek de auteur; kijk of die bestaat
+                // FirstOrDefault geeft een uitgeverij terug indien gevonden
+                // of 'null' indien niks gevonden
+                var uitgeverij = context.Uitgeverijen
+                    .Include(uitgeverij => uitgeverij.Boeken)
+                    .FirstOrDefault(uitgeverij => uitgeverij.Naam == uitgeverijNaam);
 
+                if (uitgeverij == null)
+                {
+                    Error("Geen uitgeverij met deze naam gevonden");
+                    return;
+                }
+
+                if (uitgeverij.Boeken.Any())
+                {
+                    Error("Deze uitgeverij heeft verschillende boeken uitgebracht. Verwijderen is niet toegestaan!");
+                    return;
+                }
+
+                context.Uitgeverijen.Remove(uitgeverij);
+                context.SaveChanges();
+                Success("Uitgeverij werd verwijderd");
+            }
         }
 
 
-        // TODO! (uitbreiding)
-        // TIP: Je kan een auteur pas verwijderen indien geen enkel boek deze nog referenced.
-        // Toon dus een gepaste melding als dit het geval is -- geen exception!
         private static void DeleteBook()
         {
+            Console.WriteLine("# Boek verwijderen");
+            string isbnnr = TextInput("ISBN-nummer");
 
+            using (var context = new BoekenDatabaseContext())
+            {
+                var boek = context.Boeken.FirstOrDefault(boek => boek.ISBNNr == isbnnr);
+
+                if(boek == null)
+                {
+                    Error($"Boek met isbn-nummer '{isbnnr}' werd niet gevonden");
+                    return;
+                }
+
+                context.Boeken.Remove(boek);
+                context.SaveChanges();
+                Success("Boek werd verwijderd");
+            }
+            Header();
         }
     }
 }

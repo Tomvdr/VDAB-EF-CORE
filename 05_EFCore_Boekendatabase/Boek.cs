@@ -14,6 +14,8 @@ namespace _05_EFCore_Boekendatabase
         public string Title { get; set; }
         public int PaginaAantal { get; set; }
         
+
+
         public int AuteurId { get; set; }
         public Auteur Auteur { get; set; }
 

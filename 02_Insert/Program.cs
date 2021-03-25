@@ -26,7 +26,7 @@ namespace _02_Insert
                 // Open de connectie
                 connection.Open();
 
-                // We maken een commando object richting de database
+                /*// We maken een commando object richting de database
                 SqlCommand command = connection.CreateCommand();
 
                 // We geven deze een CommandText, nl. onze query
@@ -36,14 +36,27 @@ namespace _02_Insert
                 var parameter = new SqlParameter("@Naam", SqlDbType.NVarChar);
                 parameter.Value = Naam;
 
-
                 // Voeg onze parameter toe aan het commando
                 command.Parameters.Add(parameter);
 
                 // We voeren een query uit die geen resultaat gaat teruggeven -- het is namelijk een INSERT en geen SELECT.
                 // Bijgevolg moeten we ook niet over de data lussen, want die is er niet
                 // Het enigste dat we moeten doen om dit commando te lanceren is het volgende
-                command.ExecuteNonQuery();
+                Console.WriteLine("Aantal rijen aangepast: {0}", command.ExecuteNonQuery());
+
+                */
+
+                SqlCommand command2 = connection.CreateCommand();
+                command2.CommandText = "INSERT INTO Uitgeverij (Naam) VALUES (@test)";
+
+                SqlParameter parameter2 = new SqlParameter("@test", SqlDbType.NVarChar);
+                parameter2.Value = "BERND";
+
+                command2.Parameters.Add(parameter2); 
+
+                Console.WriteLine(command2.ExecuteNonQuery());
+
+
             }
         }
     }
