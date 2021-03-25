@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace _05_EFCore_Boekendatabase
@@ -9,6 +10,32 @@ namespace _05_EFCore_Boekendatabase
         static void Main(string[] args)
         {
             ShowAuthorsWithBooks();
+
+            List<Boek> boeken = new List<Boek>
+            {
+                new Boek
+                {
+                    Title = "Harry Potter"
+                },
+                new Boek
+                {
+                    Title = "Later Stephen King"
+                },
+            };
+
+            // LINQ-manier
+            var result = boeken.Where(boek => boek.Title == "Harry Potter");
+
+
+            // foreach
+            List<Boek> result2 = new List<Boek>();
+            foreach(var boek in boeken)
+            {
+                if(boek.Title == "Harry Potter")
+                {
+                    result2.Add(boek);
+                }
+            }
         }
 
         private static void ShowAuthorsWithBooks()

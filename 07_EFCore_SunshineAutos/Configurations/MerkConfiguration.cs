@@ -26,7 +26,7 @@ namespace _07_EFCore_SunshineAutos.EntityMappings
             // Relaties
             // Een merk heeft meerdere modellen -- omgekeerd heeft een model maar één merk. Dit is een één-op-veel relatie
             // Dwz. dat we een HasMany().WithOne() moeten schrijven:
-            merk.HasMany(_ => _.Modellen).WithOne(_ => _.Merk);
+            merk.HasMany(_ => _.Modellen).WithOne(_ => _.Merk).HasForeignKey(_ => _.MerkId);
             // Bovenstaand lees je dus als "een merk heeft meerdere modellen, een model heeft één merk"
             // Dit is noodzakelijk, EF core gaat hier onze foreign keys aanmaken.
         }

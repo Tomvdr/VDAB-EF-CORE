@@ -4,22 +4,13 @@ using System.Text;
 
 namespace _07_EFCore_SunshineAutos.Entities
 {
-    public class Model
+    public class Kleur
     {
         public int Id { get; set; }
         public string Naam { get; set; }
-        
-
-        // Foreign keys
-        public int MerkId { get; set; }
-
 
         // Navigational properties
-        // Een model heeft een merk
-        public Merk Merk { get; set; }
-
-
-        // Een model kan gebruikt worden door meerdere wagens
+        // Een kleur kan gebruikt worden in verschillende wagens
         public List<Wagen> Wagens { get; set; }
     }
 }

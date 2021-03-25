@@ -225,6 +225,7 @@ namespace _03_Applicatie_oefening
                         // Dus maken we één aan:
                         auteur = new Auteur
                         {
+                   
                             Naam = auteurNaam
                         };
                         context.Auteurs.Add(auteur);
@@ -276,7 +277,7 @@ namespace _03_Applicatie_oefening
 
                     foreach (var boek in auteur.Boeken)
                     {
-                        Console.WriteLine($" - Boek: {boek.Title} (ISBN-nummer = {boek.ISBNNr}");
+                        Console.WriteLine($" - Boek: {boek.Title} (ISBN-nummer = {boek.ISBNNr})");
                     }
                 }
 
@@ -302,7 +303,7 @@ namespace _03_Applicatie_oefening
 
                     foreach(var boek in uitgeverij.Boeken)
                     {
-                        Console.WriteLine($" - Boek: {boek.Title} (ISBN-nummer = {boek.ISBNNr}");
+                        Console.WriteLine($" - Boek: {boek.Title} (ISBN-nummer = {boek.ISBNNr})");
                     }
                 } 
             }
