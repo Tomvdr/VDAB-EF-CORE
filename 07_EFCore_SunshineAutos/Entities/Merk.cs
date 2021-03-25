@@ -7,6 +7,8 @@ namespace _07_EFCore_SunshineAutos.Entities
     {
         public int Id { get; set; }
         public string Naam { get; set; }
+
+        // Navigational properties
         public List<Model> Modellen { get; set; }
     }
 }
